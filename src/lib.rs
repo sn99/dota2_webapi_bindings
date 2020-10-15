@@ -39,6 +39,24 @@ macro_rules! get {
     };
 }
 
+macro_rules! builder {
+    ($builder: ident, $url: expr) => {
+        #[derive(Debug, Default)]
+        pub struct $builder {
+            url: String,
+        }
+
+        impl $builder {
+            fn build(key: &str) -> Self {
+                Self {
+                    url: format!($url, key),
+                }
+            }
+            language!();
+        }
+    };
+}
+
 #[derive(Debug)]
 pub enum Error {
     Http(hyper::Error),
@@ -65,6 +83,8 @@ pub struct Dota2Api {
     pub key: String,
     get_heroes_builder: GetHeroesBuilder,
     get_game_items_builder: GetGameItemsBuilder,
+    get_rarities_builder: GetRaritiesBuilder,
+    get_tournament_prize_pool_builder: GetTournamentPrizePoolBuilder,
 }
 
 impl Dota2Api {
@@ -87,6 +107,26 @@ impl Dota2Api {
         GetGameItemsResult
     );
 
+    set!(set_rarities, get_rarities_builder, GetRaritiesBuilder);
+    get!(
+        get_rarities,
+        GetRarities,
+        get_rarities_builder,
+        GetRaritiesResult
+    );
+
+    set!(
+        set_tournament_prize_pool,
+        get_tournament_prize_pool_builder,
+        GetTournamentPrizePoolBuilder
+    );
+    get!(
+        get_tournament_prize_pool,
+        GetTournamentPrizePool,
+        get_tournament_prize_pool_builder,
+        GetTournamentPrizePoolResult
+    );
+
     fn get(&mut self, url: &str) -> Result<String, Error> {
         let mut response = self.http_client.get(url).send()?;
         let mut temp = String::new();
@@ -100,42 +140,35 @@ impl Dota2Api {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct GetHeroesBuilder {
-    url: String,
-}
-
+builder!(
+    GetHeroesBuilder,
+    "http://api.steampowered.com/IEconDOTA2_570/GetHeroes/v1/?key={}&"
+);
 impl GetHeroesBuilder {
-    fn build(key: &str) -> Self {
-        Self {
-            url: format!(
-                "http://api.steampowered.com/IEconDOTA2_570/GetHeroes/v1/?key={}&",
-                key
-            ),
-        }
-    }
-
     pub fn itemized_only(&mut self, param_value: bool) -> &mut Self {
         self.url
             .push_str(&*format!("itemizedonly={}&", param_value));
         self
     }
-    language!();
 }
 
-#[derive(Debug, Default)]
-pub struct GetGameItemsBuilder {
-    url: String,
-}
+builder!(
+    GetGameItemsBuilder,
+    "http://api.steampowered.com/IEconDOTA2_570/GetGameItems/v1/?key={}&"
+);
 
-impl GetGameItemsBuilder {
-    fn build(key: &str) -> Self {
-        Self {
-            url: format!(
-                "http://api.steampowered.com/IEconDOTA2_570/GetGameItems/v1/?key={}&",
-                key
-            ),
-        }
+builder!(
+    GetRaritiesBuilder,
+    "http://api.steampowered.com/IEconDOTA2_570/GetRarities/v1/?key={}&"
+);
+
+builder!(
+    GetTournamentPrizePoolBuilder,
+    "http://api.steampowered.com/IEconDOTA2_570/GetTournamentPrizePool/v1/?key={}&"
+);
+impl GetTournamentPrizePoolBuilder {
+    pub fn league_id(&mut self, param_value: usize) -> &mut Self {
+        self.url.push_str(&*format!("leagueid={}&", param_value));
+        self
     }
-    language!();
 }
