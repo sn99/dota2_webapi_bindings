@@ -10,6 +10,35 @@ use hyper::status::StatusCode;
 use hyper::Client;
 use std::io::Read;
 
+macro_rules! language {
+    () => {
+        pub fn language(&mut self, param_value: &str) -> &mut Self {
+            self.url.push_str(&*format!("language={}&", param_value));
+            self
+        }
+    };
+}
+
+macro_rules! set {
+    ($func: ident, $builder: ident, $build: ident) => {
+        pub fn $func(&mut self) -> &mut $build {
+            self.$builder = $build::build(&*self.key);
+            &mut self.$builder
+        }
+    };
+}
+
+macro_rules! get {
+    ($func: ident, $return_type: ident, $builder: ident, $result: ident) => {
+        pub fn $func(&mut self) -> Result<$return_type, Error> {
+            let response = self.get(&*self.$builder.url.clone())?;
+            let data_result: $result = serde_json::from_str(response.as_str())?;
+            let data = data_result.result;
+            Ok(data)
+        }
+    };
+}
+
 #[derive(Debug)]
 pub enum Error {
     Http(hyper::Error),
@@ -37,6 +66,7 @@ pub struct Dota2Api {
     get_heroes_builder: GetHeroesBuilder,
     get_game_items_builder: GetGameItemsBuilder,
 }
+
 impl Dota2Api {
     pub fn new(key: String) -> Self {
         Dota2Api {
@@ -46,31 +76,16 @@ impl Dota2Api {
         }
     }
 
-    pub fn set_heroes(&mut self) -> &mut GetHeroesBuilder {
-        self.get_heroes_builder = GetHeroesBuilder::build(&*self.key);
-        &mut self.get_heroes_builder
-    }
+    set!(set_heroes, get_heroes_builder, GetHeroesBuilder);
+    get!(get_heroes, GetHeroes, get_heroes_builder, GetHeroesResult);
 
-    pub fn get_heroes(&mut self) -> Result<GetHeroes, Error> {
-        dbg!(self.get_heroes_builder.url.clone());
-        let response = self.get(&*self.get_heroes_builder.url.clone())?;
-        let data_result: GetHeroesResult = serde_json::from_str(response.as_str())?;
-        let data = data_result.result;
-        Ok(data)
-    }
-
-    pub fn set_game_items(&mut self) -> &mut GetGameItemsBuilder {
-        self.get_game_items_builder = GetGameItemsBuilder::build(&*self.key);
-        &mut self.get_game_items_builder
-    }
-
-    pub fn get_game_items(&mut self) -> Result<GetGameItems, Error> {
-        dbg!(self.get_game_items_builder.url.clone());
-        let response = self.get(&*self.get_game_items_builder.url.clone())?;
-        let data_result: GetGameItemsResult = serde_json::from_str(response.as_str())?;
-        let data = data_result.result;
-        Ok(data)
-    }
+    set!(set_game_items, get_game_items_builder, GetGameItemsBuilder);
+    get!(
+        get_game_items,
+        GetGameItems,
+        get_game_items_builder,
+        GetGameItemsResult
+    );
 
     fn get(&mut self, url: &str) -> Result<String, Error> {
         let mut response = self.http_client.get(url).send()?;
@@ -105,11 +120,7 @@ impl GetHeroesBuilder {
             .push_str(&*format!("itemizedonly={}&", param_value));
         self
     }
-
-    pub fn language(&mut self, param_value: &str) -> &mut Self {
-        self.url.push_str(&*format!("language={}&", param_value));
-        self
-    }
+    language!();
 }
 
 #[derive(Debug, Default)]
@@ -126,9 +137,5 @@ impl GetGameItemsBuilder {
             ),
         }
     }
-
-    pub fn language(&mut self, param_value: &str) -> &mut Self {
-        self.url.push_str(&*format!("language={}&", param_value));
-        self
-    }
+    language!();
 }
