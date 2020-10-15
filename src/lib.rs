@@ -35,6 +35,7 @@ pub struct Dota2Api {
     http_client: Client,
     pub key: String,
     get_heroes_builder: GetHeroesBuilder,
+    get_game_items_builder: GetGameItemsBuilder,
 }
 impl Dota2Api {
     pub fn new(key: String) -> Self {
@@ -51,8 +52,22 @@ impl Dota2Api {
     }
 
     pub fn get_heroes(&mut self) -> Result<GetHeroes, Error> {
+        dbg!(self.get_heroes_builder.url.clone());
         let response = self.get(&*self.get_heroes_builder.url.clone())?;
         let data_result: GetHeroesResult = serde_json::from_str(response.as_str())?;
+        let data = data_result.result;
+        Ok(data)
+    }
+
+    pub fn set_game_items(&mut self) -> &mut GetGameItemsBuilder {
+        self.get_game_items_builder = GetGameItemsBuilder::build(&*self.key);
+        &mut self.get_game_items_builder
+    }
+
+    pub fn get_game_items(&mut self) -> Result<GetGameItems, Error> {
+        dbg!(self.get_game_items_builder.url.clone());
+        let response = self.get(&*self.get_game_items_builder.url.clone())?;
+        let data_result: GetGameItemsResult = serde_json::from_str(response.as_str())?;
         let data = data_result.result;
         Ok(data)
     }
@@ -85,8 +100,35 @@ impl GetHeroesBuilder {
         }
     }
 
-    pub fn itemized_only(&mut self, param_value: bool) {
+    pub fn itemized_only(&mut self, param_value: bool) -> &mut Self {
         self.url
             .push_str(&*format!("itemizedonly={}&", param_value));
+        self
+    }
+
+    pub fn language(&mut self, param_value: &str) -> &mut Self {
+        self.url.push_str(&*format!("language={}&", param_value));
+        self
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct GetGameItemsBuilder {
+    url: String,
+}
+
+impl GetGameItemsBuilder {
+    fn build(key: &str) -> Self {
+        Self {
+            url: format!(
+                "http://api.steampowered.com/IEconDOTA2_570/GetGameItems/v1/?key={}&",
+                key
+            ),
+        }
+    }
+
+    pub fn language(&mut self, param_value: &str) -> &mut Self {
+        self.url.push_str(&*format!("language={}&", param_value));
+        self
     }
 }
