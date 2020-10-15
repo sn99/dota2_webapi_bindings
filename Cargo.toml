@@ -1,6 +1,6 @@
 [package]
 name = "dota2_webapi_bindings"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["sn99 <siddharthn.099@gmail.com>"]
 edition = "2018"
 travis-ci = { repository = "sn99/brainhug", branch = "master" }

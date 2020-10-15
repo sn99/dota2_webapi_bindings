@@ -1,3 +1,38 @@
+//! The crate serves as an bindings to the official
+//! [dota2 webapi](https://dev.dota2.com/forum/dota-2/spectating/replays/webapi/60177-things-you-should-know-before-starting?t=58317)
+//! The crate has been made so you can call make calls directly and get a result back in a Struct.
+//!
+//! Read the full list of api calls [here](https://wiki.teamfortress.com/wiki/WebAPI#Dota_2).
+//!
+//! The webapi terms are same as official except they are all in lowercase, Eg : `GetGameItems` is now `get_game_items()`.
+//!
+//! You also need a key that you can get [here](http://steamcommunity.com/dev/apikey).
+//! > Originally posted by Zoid at [forum](https://dev.dota2.com/forum/dota-2/spectating/replays/webapi/60177-things-you-should-know-before-starting?t=58317) When you go to http://steamcommunity.com/dev/apikey the "domain"
+//! > field is just a note. It's not actually used for anything and is just a helpful field so you can
+//! > tell us what your website is. You can just put your name in for now. Once you get a key, its what
+//! > uniquely identifies you when accessing our WebAPI calls.
+//!
+//! In your `main.rs` or anywhere you intend to use the library create a non-mutable string of
+//! you token pass first to use the library, there is no calls without the token.
+//! ```rust
+//! //main.rs
+//! use dota2_webapi_bindings::Dota2Api;
+//! static DOTA2_KEY: &str = "0123456789"; //example token
+//!
+//! fn main() {
+//!   let mut dota = Dota2Api::new(String::from(DOTA2_KEY));
+//!   // we use `set` to configure the URL first
+//!   dota.set_heroes().itemized_only(true).language("zh_zh");
+//!   // you can also write the above as just `dota.set_heroes();` or `dota.set_heroes().itemized_only(true);`
+//!   // or just `dota.set_heroes().language("zh_zh");` or `dota.set_heroes().language("zh_zh").itemized_only(true);`
+//!   // our builder like function takes care of optional parameters
+//!
+//!   // and finally `get` to retrieve our struct
+//!   let data = dota.get_heroes().expect("something went wrong, ez mid");
+//! }
+//!
+//! ```
+
 #[macro_use]
 extern crate serde_derive;
 extern crate hyper;
@@ -10,6 +45,13 @@ use hyper::status::StatusCode;
 use hyper::Client;
 use std::io::Read;
 
+/// language macro for easy implementation in various builder struct
+///
+/// The language to retrieve results in (default is en_us) (see http://en.wikipedia.org/wiki/ISO_639-1 for
+/// the language codes (first two characters) and http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes for
+/// the country codes (last two characters))
+///
+/// language (Optional) (string) : The language to provide output in.
 macro_rules! language {
     () => {
         pub fn language(&mut self, param_value: &str) -> &mut Self {
@@ -19,6 +61,7 @@ macro_rules! language {
     };
 }
 
+/// A `set!` macro to get our `set` functions
 macro_rules! set {
     ($func: ident, $builder: ident, $build: ident) => {
         pub fn $func(&mut self) -> &mut $build {
@@ -28,6 +71,7 @@ macro_rules! set {
     };
 }
 
+/// A `get!` macro to get our `get` functions
 macro_rules! get {
     ($func: ident, $return_type: ident, $builder: ident, $result: ident) => {
         pub fn $func(&mut self) -> Result<$return_type, Error> {
@@ -39,6 +83,7 @@ macro_rules! get {
     };
 }
 
+/// builder to reduce boilerplate
 macro_rules! builder {
     ($builder: ident, $url: expr) => {
         #[derive(Debug, Default)]
@@ -57,6 +102,7 @@ macro_rules! builder {
     };
 }
 
+/// different type of errors we can receive during either fetching of data or just unpacking JSON
 #[derive(Debug)]
 pub enum Error {
     Http(hyper::Error),
@@ -77,6 +123,14 @@ impl From<serde_json::Error> for Error {
     }
 }
 
+/// The main `Dota2Api` of you library works by saving states of all the invoked URLs (you only call the one you need)
+/// language macro for easy implementation in various builder struct
+///
+/// The language to retrieve results in (default is en_us) (see http://en.wikipedia.org/wiki/ISO_639-1 for
+/// the language codes (first two characters) and http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes for
+/// the country codes (last two characters))
+///
+/// language (Optional) (string) : The language to provide output in.
 #[derive(Debug, Default)]
 pub struct Dota2Api {
     http_client: Client,
@@ -97,9 +151,11 @@ impl Dota2Api {
     }
 
     set!(set_heroes, get_heroes_builder, GetHeroesBuilder);
+    /// use `set` before `get`
     get!(get_heroes, GetHeroes, get_heroes_builder, GetHeroesResult);
 
     set!(set_game_items, get_game_items_builder, GetGameItemsBuilder);
+    /// use `set` before `get`
     get!(
         get_game_items,
         GetGameItems,
@@ -120,6 +176,7 @@ impl Dota2Api {
         get_tournament_prize_pool_builder,
         GetTournamentPrizePoolBuilder
     );
+    /// use `set` before `get`
     get!(
         get_tournament_prize_pool,
         GetTournamentPrizePool,
@@ -127,6 +184,7 @@ impl Dota2Api {
         GetTournamentPrizePoolResult
     );
 
+    /// our get function to actually get the data from the api
     fn get(&mut self, url: &str) -> Result<String, Error> {
         let mut response = self.http_client.get(url).send()?;
         let mut temp = String::new();
@@ -145,6 +203,7 @@ builder!(
     "http://api.steampowered.com/IEconDOTA2_570/GetHeroes/v1/?key={}&"
 );
 impl GetHeroesBuilder {
+    /// itemizedonly (Optional) (bool) : Return a list of itemized heroes only.
     pub fn itemized_only(&mut self, param_value: bool) -> &mut Self {
         self.url
             .push_str(&*format!("itemizedonly={}&", param_value));
@@ -167,6 +226,7 @@ builder!(
     "http://api.steampowered.com/IEconDOTA2_570/GetTournamentPrizePool/v1/?key={}&"
 );
 impl GetTournamentPrizePoolBuilder {
+    /// leagueid (Optional) (int) : The ID of the league to get the prize pool of.
     pub fn league_id(&mut self, param_value: usize) -> &mut Self {
         self.url.push_str(&*format!("leagueid={}&", param_value));
         self

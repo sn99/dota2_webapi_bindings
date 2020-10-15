@@ -1,3 +1,9 @@
+//! I have by default use Json instead of XML cause it is more popular and easy to work with, and you do not need ti use
+//! them directly!!
+//!
+//! Almost all of the structs have `localized_name : Option<String>` as parameter, this will always
+//! return `None` unless you use `language()` parameter
+//! **Note**: I recommend using `language` cause it gives names like "clarity" instead of "item_clarity"
 #[derive(Deserialize, Debug)]
 pub struct GetHeroesResult {
     pub(crate) result: GetHeroes,

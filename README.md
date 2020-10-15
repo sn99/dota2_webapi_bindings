@@ -11,11 +11,30 @@ You can find the official documentation [here](https://wiki.teamfortress.com/wik
 
 ### How to Use :
 
-In `Cargo.toml`
+In `Cargo.toml` :
 ```toml
 [dependencies]
 dota2_webapi_bindings = "*"
 ```
+In `main.rs` :
+
+```rust
+//main.rs
+use dota2_webapi_bindings::Dota2Api;
+static DOTA2_KEY: &str = "0123456789"; //example token
+
+fn main() {
+   let mut dota = Dota2Api::new(String::from(DOTA2_KEY));
+   // we use `set` to configure the URL first
+   dota.set_heroes().itemized_only(true).language("zh_zh");
+   // you can also write the above as just `dota.set_heroes();` or `dota.set_heroes().itemized_only(true);`
+   // or just `dota.set_heroes().language("zh_zh");` or `dota.set_heroes().language("zh_zh").itemized_only(true);`
+   // our builder like function takes care of optional parameters
+ 
+   // and finally `get` to retrieve our struct
+   let data = dota.get_heroes().expect("something went wrong, ez mid");
+ }
+ ```
 
 The webapi terms are same as official except they are all in lowercase, Eg : `GetGameItems` is now `get_game_items()`.
 
