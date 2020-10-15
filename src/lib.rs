@@ -30,25 +30,28 @@ impl From<serde_json::Error> for Error {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Dota2Api {
     http_client: Client,
     pub key: String,
+    get_heroes_builder: GetHeroesBuilder,
 }
 impl Dota2Api {
     pub fn new(key: String) -> Self {
         Dota2Api {
             http_client: Client::new(),
             key,
+            ..Default::default()
         }
     }
 
+    pub fn set_heroes(&mut self) -> &mut GetHeroesBuilder {
+        self.get_heroes_builder = GetHeroesBuilder::build(&*self.key);
+        &mut self.get_heroes_builder
+    }
+
     pub fn get_heroes(&mut self) -> Result<GetHeroes, Error> {
-        let mut url = format!(
-            "http://api.steampowered.com/IEconDOTA2_570/GetHeroes/v1/?key={}&",
-            self.key
-        );
-        let response = self.get(url.as_str())?;
+        let response = self.get(&*self.get_heroes_builder.url.clone())?;
         let data_result: GetHeroesResult = serde_json::from_str(response.as_str())?;
         let data = data_result.result;
         Ok(data)
@@ -64,5 +67,26 @@ impl Dota2Api {
         }
         let _ = response.read_to_string(&mut temp);
         Ok(temp)
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct GetHeroesBuilder {
+    url: String,
+}
+
+impl GetHeroesBuilder {
+    fn build(key: &str) -> Self {
+        Self {
+            url: format!(
+                "http://api.steampowered.com/IEconDOTA2_570/GetHeroes/v1/?key={}&",
+                key
+            ),
+        }
+    }
+
+    pub fn itemized_only(&mut self, param_value: bool) {
+        self.url
+            .push_str(&*format!("itemizedonly={}&", param_value));
     }
 }
