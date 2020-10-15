@@ -8,6 +8,7 @@ description = "Rust bindings for official dota2 webapi"
 keywords = ["dota2", "dota", "webapi", "bindings"]
 readme = "README.md"
 homepage = "https://github.com/sn99/dota2_webapi_bindings"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [badges]
