@@ -1,6 +1,6 @@
 # dota2_webapi_bindings
 
-[![Build Status](https://travis-ci.com/sn99/dota2_webapi_bindings.svg?branch=main)](https://travis-ci.com/sn99/dota2_webapi_bindings)
+[![Build Status](https://travis-ci.com/sn99/dota2_webapi_bindings.svg?branch=master)](https://travis-ci.com/sn99/dota2_webapi_bindings)
 [![Crates.io Download](https://img.shields.io/crates/d/dota2_webapi_bindings.svg)](https://crates.io/crates/dota2_webapi_bindings)
 [![crate](https://img.shields.io/crates/v/dota2_webapi_bindings.svg)](https://crates.io/crates/dota2_webapi_bindings)
 [![Documentation](https://docs.rs/dota2_webapi_bindings/badge.svg)](https://docs.rs/dota2_webapi_bindings) 
