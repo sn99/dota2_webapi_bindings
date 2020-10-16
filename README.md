@@ -7,7 +7,9 @@
 
 Dota 2 webapi bindings for rust
 
-You can find the official documentation [here](https://wiki.teamfortress.com/wiki/WebAPI#Dota_2)
+You can find the official(outdated) documentation [here](https://wiki.teamfortress.com/wiki/WebAPI#Dota_2)
+
+I am currently using [xpaw](https://steamapi.xpaw.me/#) to get a list of APIs
 
 ### How to Use :
 
@@ -38,7 +40,21 @@ fn main() {
 
 The webapi terms are same as official except they are all in lowercase, Eg : `GetGameItems` is now `get_game_items()`.
 
+##### Available calls :
+* IEconDOTA2_570
+    * GetGameItems
+    * GetHeroes
+    * GetRarities
+    * GetTournamentPrizePool
+* IDOTA2Match_205790
+    * GetLeagueListing
+* IDOTA2Match_570
+    * GetLiveLeagueGames
+
 See [documentation](https://docs.rs/dota2_webapi_bindings) for more.
+
+**Note:** Try using `language()` with everything, just put in any string, it seems like its gives better readable name
+and description for some reason
 
 ## License
 

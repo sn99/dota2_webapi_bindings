@@ -1,8 +1,10 @@
-//! The crate serves as an bindings to the official
+//! The crate serves as an bindings to the official (outdated)
 //! [dota2 webapi](https://dev.dota2.com/forum/dota-2/spectating/replays/webapi/60177-things-you-should-know-before-starting?t=58317)
 //! The crate has been made so you can call make calls directly and get a result back in a Struct.
 //!
-//! Read the full list of api calls [here](https://wiki.teamfortress.com/wiki/WebAPI#Dota_2).
+//! Read the full list of api(outdated) calls [here](https://wiki.teamfortress.com/wiki/WebAPI#Dota_2).
+//!
+//! Use [xpaw](https://steamapi.xpaw.me/#) for latest.
 //!
 //! The webapi terms are same as official except they are all in lowercase, Eg : `GetGameItems` is now `get_game_items()`.
 //!
@@ -32,6 +34,9 @@
 //! }
 //!
 //! ```
+//!
+//! **Note:** Try using `language()` with everything, just put in any string, it seems like its gives better readable name
+//! and description for some reason, I have not set-up a default cause sometimes that might not be your intension.
 
 #[macro_use]
 extern crate serde_derive;
@@ -52,6 +57,9 @@ use std::io::Read;
 /// the country codes (last two characters))
 ///
 /// language (Optional) (string) : The language to provide output in.
+///
+/// **Note:** Try using `language()` with everything, just put in any string, it seems like its gives better readable name
+/// and description for some reason
 macro_rules! language {
     () => {
         pub fn language(&mut self, param_value: &str) -> &mut Self {
@@ -97,7 +105,6 @@ macro_rules! builder {
                     url: format!($url, key),
                 }
             }
-            language!();
         }
     };
 }
@@ -139,6 +146,8 @@ pub struct Dota2Api {
     get_game_items_builder: GetGameItemsBuilder,
     get_rarities_builder: GetRaritiesBuilder,
     get_tournament_prize_pool_builder: GetTournamentPrizePoolBuilder,
+    get_league_listing_builder: GetLeagueListingBuilder,
+    get_live_league_games_builder: GetLiveLeagueGamesBuilder,
 }
 
 impl Dota2Api {
@@ -151,11 +160,11 @@ impl Dota2Api {
     }
 
     set!(set_heroes, get_heroes_builder, GetHeroesBuilder);
-    /// use `set` before `get`
+    // use `set` before `get`
     get!(get_heroes, GetHeroes, get_heroes_builder, GetHeroesResult);
 
     set!(set_game_items, get_game_items_builder, GetGameItemsBuilder);
-    /// use `set` before `get`
+    // use `set` before `get`
     get!(
         get_game_items,
         GetGameItems,
@@ -164,6 +173,7 @@ impl Dota2Api {
     );
 
     set!(set_rarities, get_rarities_builder, GetRaritiesBuilder);
+    // use `set` before `get`
     get!(
         get_rarities,
         GetRarities,
@@ -176,12 +186,38 @@ impl Dota2Api {
         get_tournament_prize_pool_builder,
         GetTournamentPrizePoolBuilder
     );
-    /// use `set` before `get`
+    // use `set` before `get`
     get!(
         get_tournament_prize_pool,
         GetTournamentPrizePool,
         get_tournament_prize_pool_builder,
         GetTournamentPrizePoolResult
+    );
+
+    set!(
+        set_league_listing,
+        get_league_listing_builder,
+        GetLeagueListingBuilder
+    );
+    // use `set` before `get`
+    get!(
+        get_league_listing,
+        GetLeagueListing,
+        get_league_listing_builder,
+        GetLeagueListingResult
+    );
+
+    set!(
+        set_live_league_games,
+        get_live_league_games_builder,
+        GetLiveLeagueGamesBuilder
+    );
+    // use `set` before `get`
+    get!(
+        get_live_league_games,
+        GetLiveLeagueGames,
+        get_live_league_games_builder,
+        GetLiveLeagueGamesResult
     );
 
     /// our get function to actually get the data from the api
@@ -198,6 +234,10 @@ impl Dota2Api {
     }
 }
 
+//==============================================================================
+//IEconDOTA2_570
+//==============================================================================
+
 builder!(
     GetHeroesBuilder,
     "http://api.steampowered.com/IEconDOTA2_570/GetHeroes/v1/?key={}&"
@@ -209,17 +249,24 @@ impl GetHeroesBuilder {
             .push_str(&*format!("itemizedonly={}&", param_value));
         self
     }
+    language!();
 }
 
 builder!(
     GetGameItemsBuilder,
     "http://api.steampowered.com/IEconDOTA2_570/GetGameItems/v1/?key={}&"
 );
+impl GetGameItemsBuilder {
+    language!();
+}
 
 builder!(
     GetRaritiesBuilder,
     "http://api.steampowered.com/IEconDOTA2_570/GetRarities/v1/?key={}&"
 );
+impl GetRaritiesBuilder {
+    language!();
+}
 
 builder!(
     GetTournamentPrizePoolBuilder,
@@ -231,4 +278,29 @@ impl GetTournamentPrizePoolBuilder {
         self.url.push_str(&*format!("leagueid={}&", param_value));
         self
     }
+    language!();
+}
+
+//==============================================================================
+//IDOTA2Match_205790
+//==============================================================================
+
+builder!(
+    GetLeagueListingBuilder,
+    "http://api.steampowered.com/IDOTA2Match_205790/GetLeagueListing/v1/?key={}&"
+);
+impl GetLeagueListingBuilder {
+    language!();
+}
+
+//==============================================================================
+//IDOTA2Match_570
+//==============================================================================
+
+builder!(
+    GetLiveLeagueGamesBuilder,
+    "http://api.steampowered.com/IDOTA2Match_570/GetLiveLeagueGames/v1/?key={}&"
+);
+impl GetLiveLeagueGamesBuilder {
+    language!();
 }
