@@ -303,4 +303,14 @@ builder!(
 );
 impl GetLiveLeagueGamesBuilder {
     language!();
+    /// Only show matches of the specified league id
+    pub fn league_id(&mut self, param_value: usize) -> &mut Self {
+        self.url.push_str(&*format!("league_id={}&", param_value));
+        self
+    }
+    /// Only show matches of the specified match id
+    pub fn match_id(&mut self, param_value: usize) -> &mut Self {
+        self.url.push_str(&*format!("match_id={}&", param_value));
+        self
+    }
 }

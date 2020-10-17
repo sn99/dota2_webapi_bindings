@@ -9,7 +9,8 @@
 //! return `None` unless you use `language()` parameter
 //! **Note**: I recommend using `language` cause it gives names like "clarity" instead of "item_clarity"
 
-use serde_with;
+use serde::de::{self, Error as _, MapAccess, Visitor};
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct GetHeroesResult {
@@ -185,10 +186,52 @@ pub struct Ancient {
     picks: Option<Vec<HeroId>>,
     bans: Option<Vec<HeroId>>,
     players: Vec<PlayerDetailed>,
-    /// I hate steam for just giving just one ability in json format while in fact there are 5 in raw
+    /// I hate steam for just giving just one ability in json format while in fact there are 5 or less in raw
     /// and for mozilla to not point in out bobo
-    //    #[serde(with = "serde_with::rust::tuple_list_as_map")]
-    abilities: Option<Vec<Ability>>,
+    #[serde(flatten)]
+    abilities: Abilities,
+}
+
+#[derive(Debug)]
+struct Abilities(Vec<Ability>);
+
+#[derive(Debug, Deserialize)]
+struct Ability {
+    ability_level: usize,
+    ability_id: usize,
+}
+
+impl<'de> Deserialize<'de> for Abilities {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        struct MyVisitor;
+
+        impl<'d> Visitor<'d> for MyVisitor {
+            type Value = Vec<Ability>;
+
+            fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+                f.write_str("a map of abilities")
+            }
+
+            fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'d>,
+            {
+                let mut abilities = Vec::new();
+                while let Some((key, mut value)) = access.next_entry()? {
+                    if key == "abilities" {
+                        abilities.append(&mut value);
+                    } else {
+                        return Err(M::Error::unknown_field(key, &["abilities"]));
+                    }
+                }
+                Ok(abilities)
+            }
+        }
+        Ok(Abilities(deserializer.deserialize_map(MyVisitor)?))
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -222,10 +265,4 @@ pub struct PlayerDetailed {
     position_x: f64,
     position_y: f64,
     net_worth: usize,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Ability {
-    ability_id: usize,
-    ability_level: usize,
 }
