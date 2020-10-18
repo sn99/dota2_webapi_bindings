@@ -50,6 +50,7 @@ The webapi terms are same as official except they are all in lowercase, Eg : `Ge
     * GetLeagueListing
 * IDOTA2Match_570
     * GetLiveLeagueGames
+    * GetTopLiveGame
 
 See [documentation](https://docs.rs/dota2_webapi_bindings) for more.
 

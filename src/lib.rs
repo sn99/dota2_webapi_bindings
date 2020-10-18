@@ -35,6 +35,18 @@
 //!
 //! ```
 //!
+//! ##### Available calls :
+//! * IEconDOTA2_570
+//!     * GetGameItems
+//!     * GetHeroes
+//!     * GetRarities
+//!     * GetTournamentPrizePool
+//! * IDOTA2Match_205790
+//!     * GetLeagueListing
+//! * IDOTA2Match_570
+//!     * GetLiveLeagueGames
+//!     * GetTopLiveGame
+//!
 //! **Note:** Try using `language()` with everything, just put in any string, it seems like its gives better readable name
 //! and description for some reason, I have not set-up a default cause sometimes that might not be your intension.
 
@@ -45,10 +57,14 @@ extern crate serde_json;
 
 pub mod dota;
 
-use dota::*;
 use hyper::status::StatusCode;
 use hyper::Client;
 use std::io::Read;
+
+use crate::dota::{
+    get_game_items::*, get_heroes::*, get_league_listing::*, get_live_league_games::*,
+    get_rarities::*, get_top_live_game::*, get_tournament_prize_pool::*,
+};
 
 /// language macro for easy implementation in various builder struct
 ///
@@ -148,6 +164,7 @@ pub struct Dota2Api {
     get_tournament_prize_pool_builder: GetTournamentPrizePoolBuilder,
     get_league_listing_builder: GetLeagueListingBuilder,
     get_live_league_games_builder: GetLiveLeagueGamesBuilder,
+    get_top_live_game_builder: GetTopLiveGameBuilder,
 }
 
 impl Dota2Api {
@@ -219,6 +236,19 @@ impl Dota2Api {
         get_live_league_games_builder,
         GetLiveLeagueGamesResult
     );
+
+    set!(
+        set_top_live_game,
+        get_top_live_game_builder,
+        GetTopLiveGameBuilder
+    );
+    // use `set` before `get`
+    pub fn get_top_live_game(&mut self) -> Result<GetTopLiveGame, Error> {
+        let response = self.get(&*self.get_top_live_game_builder.url.clone())?;
+        let data_result: GetTopLiveGame = serde_json::from_str(response.as_str())?;
+        let data = data_result;
+        Ok(data)
+    }
 
     /// our get function to actually get the data from the api
     fn get(&mut self, url: &str) -> Result<String, Error> {
@@ -311,6 +341,20 @@ impl GetLiveLeagueGamesBuilder {
     /// Only show matches of the specified match id
     pub fn match_id(&mut self, param_value: usize) -> &mut Self {
         self.url.push_str(&*format!("match_id={}&", param_value));
+        self
+    }
+}
+
+builder!(
+    GetTopLiveGameBuilder,
+    "http://api.steampowered.com/IDOTA2Match_570/GetTopLiveGame/v1/?key={}&"
+);
+
+impl GetTopLiveGameBuilder {
+    language!();
+    /// Which partner's games to use
+    pub fn partner(&mut self, param_value: usize) -> &mut Self {
+        self.url.push_str(&*format!("partner={}&", param_value));
         self
     }
 }
